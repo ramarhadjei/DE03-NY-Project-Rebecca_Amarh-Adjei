@@ -1,2 +1,2 @@
 # DE03-NY
-case study submittion
+case study Submission
