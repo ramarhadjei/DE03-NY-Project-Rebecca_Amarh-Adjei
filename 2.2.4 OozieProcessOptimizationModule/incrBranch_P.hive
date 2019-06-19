@@ -1,0 +1,18 @@
+use cdw_sapp;
+SET hive.exec.dynamic.partition=true;
+SET hive.exec.dynamic.partition.mode=nonstrict;
+
+Insert into table CDW_SAPP_D_BRANCH_P
+Partition (BRANCH_STATE)
+SELECT BRANCH_CODE, 
+BRANCH_NAME,
+BRANCH_STREET,
+BRANCH_CITY,
+BRANCH_ZIP,
+BRANCH_PHONE,
+LAST_UPDATED,
+BRANCH_STATE
+From CDW_SAPP_D_BRANCH;
+
+
+

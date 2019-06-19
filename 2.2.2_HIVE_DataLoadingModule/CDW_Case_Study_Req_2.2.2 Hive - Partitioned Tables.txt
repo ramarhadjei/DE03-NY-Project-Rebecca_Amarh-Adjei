@@ -1,0 +1,132 @@
+//  Rebecca Amarh-Adjei: Data Engineer Case Study:  Credit Card System - September 2018
+//Req. 2.2.2 - Data Loading with Hive
+
+//Create External Partitioned Tables
+// 1) Create Partitioned Branch Table partitioned by Branch_State.
+SET hive.exec.dynamic.partition=true;
+SET hive.exec.dynamic.partition.mode=nonstrict;
+
+
+Create external Table CDW_SAPP_D_BRANCH_P (BRANCH_CODE INT, 
+BRANCH_NAME STRING,
+BRANCH_STREET STRING,
+BRANCH_CITY STRING,
+BRANCH_ZIP INT,
+BRANCH_PHONE STRING,
+LAST_UPDATED timestamp
+)
+Partitioned by (BRANCH_STATE String)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n'
+Stored as textfile
+LOCATION "/user/maria_dev/Credit_Card_System/CDW_SAPP_D_BRANCH_P/";
+
+Insert overwrite table CDW_SAPP_D_BRANCH_P
+Partition (BRANCH_STATE)
+SELECT BRANCH_CODE, 
+BRANCH_NAME,
+BRANCH_STREET,
+BRANCH_CITY,
+BRANCH_ZIP,
+BRANCH_PHONE,
+LAST_UPDATED,
+BRANCH_STATE
+From CDW_SAPP_D_BRANCH;
+
+Select * from CDW_SAPP_D_BRANCH_P Where Branch_State = 'NY';
+
+
+// 2). Create Partitioned Customer Table partitioned by Cust_State
+SET hive.exec.dynamic.partition=true;
+SET hive.exec.dynamic.partition.mode=nonstrict;
+
+Create external Table CDW_SAPP_D_CUSTOMER_P (CUST_SSN INT,
+CUST_F_NAME STRING, 
+CUST_M_NAME STRING, 
+CUST_L_NAME STRING,
+CUST_CC_NO STRING,
+CUST_STREET	STRING,
+CUST_CITY STRING,
+CUST_COUNTRY STRING,
+CUST_ZIP INT,
+CUST_PHONE STRING,
+CUST_EMAIL STRING,
+LAST_UPDATED TIMESTAMP						
+)
+Partitioned by (CUST_STATE String)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n'
+Stored as textfile
+LOCATION "/user/maria_dev/Credit_Card_System/CDW_SAPP_D_CUSTOMER_P/";
+
+Insert overwrite table CDW_SAPP_D_CUSTOMER_P
+Partition (CUST_STATE)
+SELECT CUST_SSN,
+CUST_F_NAME, 
+CUST_M_NAME, 
+CUST_L_NAME,
+CUST_CC_NO,
+CUST_STREET,
+CUST_CITY,
+CUST_COUNTRY,
+CUST_ZIP,
+CUST_PHONE,
+CUST_EMAIL,
+LAST_UPDATED,	
+CUST_STATE
+From CDW_SAPP_D_CUSTOMER;
+
+Select * from CDW_SAPP_D_CUSTOMER_P Where Cust_State = 'NY';
+
+
+// 3) Create Partitioned Table Credit Card, partitioned by Transaction_Type.
+SET hive.exec.dynamic.partition=true;
+SET hive.exec.dynamic.partition.mode=nonstrict;
+
+Create external Table CDW_SAPP_F_CREDIT_CARD_P (Transaction_ID Int, 
+CUST_CC_NO STRING, 
+TIMEID STRING, 
+CUST_SSN INT, 
+BRANCH_CODE INT, 
+TRANSACTION_VALUE DECIMAL(20,3)			
+)
+Partitioned by (TRANSACTION_TYPE String)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n'
+Stored as textfile
+LOCATION "/user/maria_dev/Credit_Card_System/CDW_SAPP_F_CREDIT_CARD_P/";
+
+Insert overwrite table CDW_SAPP_F_CREDIT_CARD_P
+Partition (TRANSACTION_TYPE)
+SELECT Transaction_ID, 
+CUST_CC_NO, 
+TIMEID, 
+CUST_SSN, 
+BRANCH_CODE,  
+TRANSACTION_VALUE,	
+TRANSACTION_TYPE
+From CDW_SAPP_F_CREDIT_CARD;
+
+Select * from CDW_SAPP_F_CREDIT_CARD_P Where TRANSACTION_TYPE = 'Gas';
+
+// 4) Create Partitioned Table TIME partitioned by Quarter.
+SET hive.exec.dynamic.partition=true;
+SET hive.exec.dynamic.partition.mode=nonstrict;
+
+Create external Table CDW_SAPP_D_TIME_P (TIMEID STRING, 
+DAY INT, 
+MONTH INT,  
+YEAR INT
+)
+Partitioned by (QUARTER String)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n'
+Stored as textfile
+LOCATION "/user/maria_dev/Credit_Card_System/CDW_SAPP_D_TIME_P/";
+
+Insert overwrite table CDW_SAPP_D_TIME_P
+Partition (QUARTER)
+SELECT TIMEID, 
+DAY, 
+MONTH,  
+YEAR,
+QUARTER
+From CDW_SAPP_D_TIME;
+
+Select * from CDW_SAPP_D_TIME_P Where QUARTER = 'Q1';

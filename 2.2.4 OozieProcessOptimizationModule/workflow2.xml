@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow-app xmlns="uri:oozie:workflow:0.2" name="creditcardSystem">
+    <start to="sqoopCreditCard_node"/>
+
+    <action name="sqoopCreditCard_node">
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+              
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+            </configuration>
+<command>job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --exec incrCreditCardJob</command>		 		
+	    
+	<archive>/user/maria_dev/lib/java-json.jar#java-json.jar</archive>
+        </sqoop>
+        <ok to="sqoopBranch_node"/>
+        <error to="fail"/>
+    </action>
+
+ <action name="sqoopBranch_node">
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            	
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+            </configuration>
+<command>job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --exec incrBranchJob</command>		 		
+	    
+	<archive>/user/maria_dev/lib/java-json.jar#java-json.jar</archive>   
+        </sqoop>
+        <ok to="sqoopCustomer_node"/>
+        <error to="fail"/>
+    </action>
+
+ <action name="sqoopCustomer_node">
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+            </configuration>
+<command>job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --exec incrCustomerJob</command>		 		
+	    
+	<archive>/user/maria_dev/lib/java-json.jar#java-json.jar</archive>   
+        </sqoop>
+        <ok to="sqoopTime_node"/>
+        <error to="fail"/>
+    </action>
+
+ <action name="sqoopTime_node">
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+           
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+            </configuration>
+<command>job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --exec incrTimeJob</command>
+
+	<archive>/user/maria_dev/lib/java-json.jar#java-json.jar</archive> 	 		     
+        </sqoop>
+
+        <ok to="Customer_Table"/>
+        <error to="fail"/>
+    </action>
+
+
+   <action name = "Customer_Table">
+      <hive xmlns = "uri:oozie:hive-action:0.2">
+         <job-tracker>${jobTracker}</job-tracker>
+         <name-node>${nameNode}</name-node>
+         <script>${nameNode}/user/maria_dev/Credit_Card_System/incrCustomer_P.hive</script>
+      </hive>
+		
+      <ok to = "Branch_Table"/>
+      <error to = "fail" />
+   </action>
+
+   
+   <action name = "Branch_Table">
+      <hive xmlns = "uri:oozie:hive-action:0.2">
+        <job-tracker>${jobTracker}</job-tracker>
+         <name-node>${nameNode}</name-node>
+         <script>${nameNode}/user/maria_dev/Credit_Card_System/incrBranch_P.hive</script>
+      </hive>
+		
+      <ok to = "CreditCard_Table"/>
+      <error to = "fail"/>
+   </action>
+
+      
+   <action name = "CreditCard_Table">
+      <hive xmlns = "uri:oozie:hive-action:0.2">
+         <job-tracker>${jobTracker}</job-tracker>
+         <name-node>${nameNode}</name-node>
+         <script>${nameNode}/user/maria_dev/Credit_Card_System/incrCreditCard_P.hive</script>   
+      </hive>
+		
+      <ok to = "Time_Table"/>
+      <error to = "fail"/>
+   </action>
+
+   <action name = "Time_Table">
+      <hive xmlns = "uri:oozie:hive-action:0.2">
+         <job-tracker>${jobTracker}</job-tracker>
+         <name-node>${nameNode}</name-node>
+         <script>${nameNode}/user/maria_dev/Credit_Card_System/incrTime_P.hive</script>      
+      </hive>
+		
+      <ok to = "end"/>
+      <error to = "fail"/>
+   </action>
+
+<kill name="fail">
+        <message> Workflow failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <end name="end"/>
+</workflow-app>

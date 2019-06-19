@@ -1,0 +1,34 @@
+use cdw_sapp;
+
+Create external Table IF NOT EXISTS CDW_SAPP_D_TIME ( TIMEID STRING, 
+DAY INT, 
+MONTH INT, 
+QUARTER STRING, 
+YEAR INT
+
+)
+
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n'
+LOCATION "/user/maria_dev/Credit_Card_System/CDW_SAPP_D_TIME/";
+
+SET hive.exec.dynamic.partition=true;
+SET hive.exec.dynamic.partition.mode=nonstrict;
+
+Create external Table IF NOT EXISTS CDW_SAPP_D_TIME_P (TIMEID STRING, 
+DAY INT, 
+MONTH INT,  
+YEAR INT
+)
+Partitioned by (QUARTER String)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n'
+Stored as textfile
+LOCATION "/user/maria_dev/Credit_Card_System/CDW_SAPP_D_TIME_P/";
+
+Insert overwrite table CDW_SAPP_D_TIME_P
+Partition (QUARTER)
+SELECT TIMEID, 
+DAY, 
+MONTH,  
+YEAR,
+QUARTER
+From CDW_SAPP_D_TIME;

@@ -1,0 +1,64 @@
+//  Rebecca Amarh-Adjei: Data Engineer Case Study:  Credit Card System
+//Case Study Req-2.2.1   Data Extraction and Transportation with Sqoop 
+//Utilize  Sqoop  to  extract  the  following  data  according  to  the specifications found in the mapping document: 
+//1.   Branch data into CDW_SAPP_BRANCH 
+//2.   Credit Card Data into CDW_SAPP_CREDITCARD 
+//3.   Time data into CDW _SAPP_TIME 
+//4.   Customer Data into CDW _SAPP_CUSTOMER 
+// Notes: 
+//-Data Engineers will be required to transform the data based  on  requirements  found  in  the  Mapping Document prior to loading the data into Hadoop. 
+// -TIMEID is a field that the Data Engineers should create based on the DAY, MONTH, and TIME fields located in the  CUSTOMER  table.  Format  should  be  YYYYMMDD. For instance, January 4th, 2017 would become 20170104 
+//-Data  Engineers  should  extract  the  above  data  to  the /Credit_Card_System/ folder in the Hadoop Filesystem 
+
+// 1) for cdw_sapp_branch
+
+sqoop import 
+
+--connect jdbc:mysql://localhost/CDW_SAPP 
+--driver com.mysql.jdbc.Driver  -m 1
+
+--query 'select BRANCH_CODE, BRANCH_NAME, BRANCH_STREET, BRANCH_CITY, BRANCH_STATE, ifnull(BRANCH_ZIP, 999999) AS ZIPCODE, concat( "(", right(BRANCH_PHONE,3), ")", mid(BRANCH_PHONE,4,3) , "-", right(BRANCH_PHONE,4)) AS PHONE
+, LAST_UPDATED from CDW_SAPP_BRANCH WHERE $CONDITIONS' 
+
+--target-dir /user/maria_dev/Credit_Card_System/CDW_SAPP_D_BRANCH
+
+// 2) for cdw_sapp_creditcard
+
+sqoop import 
+
+--connect jdbc:mysql://localhost/CDW_SAPP 
+--driver com.mysql.jdbc.Driver  -m 1
+
+--query 'select TRANSACTION_ID, CREDIT_CARD_NO, CAST(CONCAT(year, "-", month, "-", day) AS DATE) AS TIMEID, CUST_SSN, BRANCH_CODE, TRANSACTION_TYPE, TRANSACTION_VALUE from CDW_SAPP_CREDITCARD WHERE $CONDITIONS' 
+
+--target-dir /user/maria_dev/Credit_Card_System/CDW_SAPP_F_CREDIT_CARD
+
+// 3) for cdw_sapp_customer
+
+sqoop import 
+
+--connect jdbc:mysql://localhost/CDW_SAPP 
+--driver com.mysql.jdbc.Driver  -m 1
+
+--query 'select SSN, CONCAT(UCASE(LEFT(FIRST_NAME, 1)), LCASE(SUBSTRING(FIRST_NAME, 2))) AS FIRST_NAME, lower(MIDDLE_NAME) as MIDDLE_NAME, CONCAT(UCASE(LEFT(LAST_NAME, 1)), LCASE(SUBSTRING(LAST_NAME, 2))) AS LAST_NAME, CREDIT_CARD_NO, concat(APT_NO, " ", STREET_NAME) AS AptAndStreet, CUST_CITY, CUST_STATE, CUST_COUNTRY, CAST(CUST_ZIP AS signed int) AS CUST_ZIP, concat(right(CUST_PHONE,3), "-" , mid(CUST_PHONE,4,3) , "-", right(CUST_PHONE,4)) AS CUST_PHONE, CUST_EMAIL, LAST_UPDATED 
+from CDW_SAPP_CUSTOMER WHERE $CONDITIONS' 
+
+--target-dir /user/maria_dev/Credit_Card_System/CDW_SAPP_D_CUSTOMER
+
+// 4) for CDW_SAPP_TIME
+
+sqoop import 
+
+--connect jdbc:mysql://localhost/CDW_SAPP 
+--driver com.mysql.jdbc.Driver  -m 1
+
+--query 'select CAST(CONCAT(year, "-", month, "-", day) AS DATE) AS TIMEID, DAY, MONTH, 
+case when month in ( 1, 2,3) then "Q1"
+ when month in ( 4, 5,6) then "Q2"
+ when month in ( 7, 8,9) then "Q3"
+ when month in ( 10, 11,12) then "Q4"
+end as Quarter,
+YEAR
+ from CDW_SAPP_CREDITCARD WHERE $CONDITIONS'
+
+--target-dir /user/maria_dev/Credit_Card_System/CDW_SAPP_D_TIME

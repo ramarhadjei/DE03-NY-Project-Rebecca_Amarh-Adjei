@@ -1,0 +1,65 @@
+//  Rebecca Amarh-Adjei: Data Engineer Case Study:  Credit Card System - September 2018
+//2.2.2 Data Loading Module. Req-2.2.2 Data Loading with Hive 
+//Utilize Hive to create tables in the Hadoop Filesystem and then load the data extracted via Sqoop into those tables. 
+//Map to transform the data based on requirements found in the Mapping Document. 
+
+//CREATE DATABASE CDW_SAPP;
+create database if not exists cdw_sapp;
+use cdw_sapp;
+
+1.//Create External Table for BRANCH
+
+Create external Table CDW_SAPP_D_BRANCH (BRANCH_CODE INT, BRANCH_NAME STRING,
+BRANCH_STREET STRING,
+BRANCH_CITY STRING,
+BRANCH_STATE STRING,
+BRANCH_ZIP INT,
+BRANCH_PHONE STRING,
+LAST_UPDATED timestamp
+)
+
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n'
+LOCATION "/user/maria_dev/Credit_Card_System/CDW_SAPP_D_BRANCH/";
+
+2. //CREATE EXTERNAL TABLE FOR CREDIT CARD
+Create external Table CDW_SAPP_F_CREDIT_CARD ( Transaction_ID Int, CUST_CC_NO STRING, 
+TIMEID STRING, CUST_SSN INT, BRANCH_CODE INT, TRANSACTION_TYPE STRING, 
+TRANSACTION_VALUE DECIMAL(20,3)
+							  
+)
+
+
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n'
+LOCATION "/user/maria_dev/Credit_Card_System/CDW_SAPP_F_CREDIT_CARD/";
+
+
+3// CREATE EXTERNAL TABLE FOR CUSTOMER
+create external table CDW_SAPP_D_CUSTOMER ( CUST_SSN INT,
+CUST_F_NAME STRING, 
+CUST_M_NAME STRING, 
+CUST_L_NAME STRING,
+CUST_CC_NO STRING,
+CUST_STREET	STRING,
+CUST_CITY STRING,
+CUST_STATE STRING,
+CUST_COUNTRY STRING,
+CUST_ZIP INT,
+CUST_PHONE STRING,
+CUST_EMAIL STRING,
+LAST_UPDATED TIMESTAMP										   
+)
+
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n'
+LOCATION "/user/maria_dev/Credit_Card_System/CDW_SAPP_D_CUSTOMER/";
+
+4.// CREATE EXTERNAL TABLE FOR TIME
+Create external Table CDW_SAPP_D_TIME ( TIMEID STRING, 
+DAY INT, 
+MONTH INT, 
+QUARTER STRING, 
+YEAR INT
+
+)
+
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n'
+LOCATION "/user/maria_dev/Credit_Card_System/CDW_SAPP_D_TIME/";

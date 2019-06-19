@@ -1,0 +1,40 @@
+use cdw_sapp;
+
+Create external Table IF NOT EXISTS CDW_SAPP_F_CREDIT_CARD ( Transaction_ID Int, CUST_CC_NO STRING, 
+TIMEID STRING, CUST_SSN INT, BRANCH_CODE INT, TRANSACTION_TYPE STRING, 
+TRANSACTION_VALUE DECIMAL(20,3)
+							  
+)
+
+
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n'
+LOCATION "/user/maria_dev/Credit_Card_System/CDW_SAPP_F_CREDIT_CARD/";
+
+SET hive.exec.dynamic.partition=true;
+SET hive.exec.dynamic.partition.mode=nonstrict;
+
+Create external Table IF NOT EXISTS CDW_SAPP_F_CREDIT_CARD_P (Transaction_ID Int, 
+CUST_CC_NO STRING, 
+TIMEID STRING, 
+CUST_SSN INT, 
+BRANCH_CODE INT, 
+TRANSACTION_VALUE DECIMAL(20,3)			
+)
+Partitioned by (TRANSACTION_TYPE String)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n'
+Stored as textfile
+LOCATION "/user/maria_dev/Credit_Card_System/CDW_SAPP_F_CREDIT_CARD_P/";
+
+Insert overwrite table CDW_SAPP_F_CREDIT_CARD_P
+Partition (TRANSACTION_TYPE)
+SELECT Transaction_ID, 
+CUST_CC_NO, 
+TIMEID, 
+CUST_SSN, 
+BRANCH_CODE,  
+TRANSACTION_VALUE,	
+TRANSACTION_TYPE
+From CDW_SAPP_F_CREDIT_CARD;
+
+
+

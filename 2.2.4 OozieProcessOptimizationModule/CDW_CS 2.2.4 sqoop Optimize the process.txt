@@ -1,0 +1,91 @@
+// Rebecca Amarh-Adjei Data Engineer Case Study September 2018
+// Case Study 2.2.4 Optimize the Process 
+// #1 Create a new Oozie workflow should only import new data.
+// to see list of Jobs: sqoop job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --list  
+
+
+//1. sqoop Job Incremental Credit Card to get the updated data from the CDW_SAPP_CREDITCARD
+// Must run with the following command to execute:  sqoop job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --exec incrCreditCardJob 
+sqoop job
+--meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop  
+--create incrCreditCardJob
+-- import
+--connect jdbc:mysql://localhost/CDW_SAPP
+--driver com.mysql.jdbc.Driver
+-m 1
+--query 'select TRANSACTION_ID, CREDIT_CARD_NO, CAST(CONCAT(year, "-", month, "-", day) AS DATE) AS TIMEID, CUST_SSN, BRANCH_CODE, TRANSACTION_TYPE, TRANSACTION_VALUE from CDW_SAPP_CREDITCARD WHERE $CONDITIONS' 
+--incremental append
+--check-column TRANSACTION_ID
+--last-value '46694' 
+--target-dir /user/maria_dev/Credit_Card_System/CDW_SAPP_F_CREDIT_CARD
+// Must run with the following command to execute:  
+sqoop job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --exec incrCreditCardJob 
+
+
+// 2.Sqoop Job for Incremental Branch to get the updated data from the CDW_SAPP_BRANCH
+// Must run with the following command to execute: sqoop job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --exec incrBranchJob 
+sqoop job
+--meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop  
+--create incrBranchJob
+-- import
+--connect jdbc:mysql://localhost/CDW_SAPP
+--driver com.mysql.jdbc.Driver
+-m 1
+--query 'select BRANCH_CODE, BRANCH_NAME, BRANCH_STREET, BRANCH_CITY, BRANCH_STATE, ifnull(BRANCH_ZIP, 999999) AS ZIPCODE, concat( "(", right(BRANCH_PHONE,3), ")", mid(BRANCH_PHONE,4,3) , "-", 
+right(BRANCH_PHONE,4)) AS PHONE, LAST_UPDATED from CDW_SAPP_BRANCH WHERE $CONDITIONS' 
+--merge-key BRANCH_CODE 
+--incremental lastmodified
+--check-column LAST_UPDATED
+--last-value '2018-04-18 20:51:47.0' 
+--target-dir /user/maria_dev/Credit_Card_System/CDW_SAPP_D_BRANCH
+// Must run with the following command to execute: 
+sqoop job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --exec incrBranchJob 
+
+
+//3. sqooop Job Incremental Customer to get the updated data from the CDW_SAPP_CUSTOMER
+// Must run with the following command to execute: sqoop job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --exec incrCustomerJob 
+sqoop job
+--meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop  
+--create incrCustomerJob
+-- import
+--connect jdbc:mysql://localhost/CDW_SAPP
+--driver com.mysql.jdbc.Driver
+-m 1
+--query 'select SSN, CONCAT(UCASE(LEFT(FIRST_NAME, 1)), LCASE(SUBSTRING(FIRST_NAME, 2))) AS FIRST_NAME, lower(MIDDLE_NAME) as MIDDLE_NAME, CONCAT(UCASE(LEFT(LAST_NAME, 1)), LCASE(SUBSTRING(LAST_NAME, 2))) AS LAST_NAME, CREDIT_CARD_NO, concat(APT_NO, " ", STREET_NAME) AS AptAndStreet, CUST_CITY, CUST_STATE, CUST_COUNTRY, CAST(CUST_ZIP AS signed int) AS CUST_ZIP, concat(right(CUST_PHONE,3), "-" , mid(CUST_PHONE,4,3) , "-", right(CUST_PHONE,4)) AS CUST_PHONE, CUST_EMAIL, LAST_UPDATED 
+from CDW_SAPP_CUSTOMER WHERE $CONDITIONS'
+--incremental append
+--check-column LAST_UPDATED
+--last-value '2018-04-21 16:49:02'
+--target-dir /user/maria_dev/Credit_Card_System/CDW_SAPP_D_CUSTOMER
+// Must run with the following command to execute: 
+sqoop job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --exec incrCustomerJob 
+
+//4. sqoop Job Incremental Time to get the updated data from the CDW_SAPP_Time
+// Must run with the following command to execute:  sqoop job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --exec incrTimeJob 
+sqoop job
+--meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop  
+--create incrTimeJob
+-- import
+--connect jdbc:mysql://localhost/CDW_SAPP
+--driver com.mysql.jdbc.Driver
+-m 1
+--query 'select CAST(CONCAT(year, "-", month, "-", day) AS DATE) AS TIMEID, DAY, MONTH, 
+case when month in ( 1, 2,3) then "Q1"
+ when month in ( 4, 5,6) then "Q2"
+ when month in ( 7, 8,9) then "Q3"
+ when month in ( 10, 11,12) then "Q4"
+end as Quarter,
+YEAR, TRANSACTION_ID
+ from CDW_SAPP_CREDITCARD WHERE $CONDITIONS'
+
+--incremental append
+--check-column TRANSACTION_ID
+--last-value '46694' 
+--target-dir /user/maria_dev/Credit_Card_System/CDW_SAPP_D_TIME
+// Must run with the following command to execute:  
+sqoop job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --exec incrTimeJob 
+ 
+
+
+
+

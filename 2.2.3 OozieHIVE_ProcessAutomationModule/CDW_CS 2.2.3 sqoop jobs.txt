@@ -1,0 +1,73 @@
+//  Rebecca Amarh-Adjei: Data Engineer Case Study:  Credit Card System - September 2018
+// 2.2.3 1) Sqoop Jobs for ozzie workflow
+// to see list of Jobs: sqoop job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --list  
+
+// 1) Sqoop Job for Branch extract data 
+// Must run with the following command to execute: sqoop job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --exec branchJob 
+sqoop job
+--meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop  
+--create branchJob
+-- import
+--connect jdbc:mysql://localhost/CDW_SAPP
+--driver com.mysql.jdbc.Driver
+-m 1
+--query 'select BRANCH_CODE, BRANCH_NAME, BRANCH_STREET, BRANCH_CITY, BRANCH_STATE, ifnull(BRANCH_ZIP, 999999) AS ZIPCODE, concat( "(", right(BRANCH_PHONE,3), ")", mid(BRANCH_PHONE,4,3) , "-", 
+right(BRANCH_PHONE,4)) AS PHONE
+, LAST_UPDATED from CDW_SAPP_BRANCH WHERE $CONDITIONS' 
+
+--target-dir /user/maria_dev/Credit_Card_System/CDW_SAPP_D_BRANCH
+--delete-target-dir
+
+
+// 2) sqooop Job for Customer extract Data
+
+// Must run with the following command to execute: sqoop job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --exec customerJob 
+
+
+sqoop job
+--meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop  
+--create customerJob
+-- import
+--connect jdbc:mysql://localhost/CDW_SAPP
+--driver com.mysql.jdbc.Driver
+-m 1
+--query 'select SSN, CONCAT(UCASE(LEFT(FIRST_NAME, 1)), LCASE(SUBSTRING(FIRST_NAME, 2))) AS FIRST_NAME, lower(MIDDLE_NAME) as MIDDLE_NAME, CONCAT(UCASE(LEFT(LAST_NAME, 1)), LCASE(SUBSTRING(LAST_NAME, 2))) AS LAST_NAME, CREDIT_CARD_NO, concat(APT_NO, " ", STREET_NAME) AS AptAndStreet, CUST_CITY, CUST_STATE, CUST_COUNTRY, CAST(CUST_ZIP AS signed int) AS CUST_ZIP, concat(right(CUST_PHONE,3), "-" , mid(CUST_PHONE,4,3) , "-", right(CUST_PHONE,4)) AS CUST_PHONE, CUST_EMAIL, LAST_UPDATED 
+from CDW_SAPP_CUSTOMER WHERE $CONDITIONS' 
+--target-dir /user/maria_dev/Credit_Card_System/CDW_SAPP_D_CUSTOMER
+--delete-target-dir
+
+
+// 3. sqoop Job for Credit Card extract Data
+// Must run with the following command to execute:  sqoop job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --exec creditcardJob 
+
+sqoop job
+--meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop  
+--create creditcardJob
+-- import
+--connect jdbc:mysql://localhost/CDW_SAPP
+--driver com.mysql.jdbc.Driver
+-m 1
+--query 'select TRANSACTION_ID, CREDIT_CARD_NO, CAST(CONCAT(year, "-", month, "-", day) AS DATE) AS TIMEID, CUST_SSN, BRANCH_CODE, TRANSACTION_TYPE, TRANSACTION_VALUE from CDW_SAPP_CREDITCARD WHERE $CONDITIONS' 
+--target-dir /user/maria_dev/Credit_Card_System/CDW_SAPP_F_CREDIT_CARD
+--delete-target-dir
+
+//4. Sqoop job for Time extract Data
+// Must run with the following command to execute:  sqoop job --meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop --exec timeJob
+sqoop job
+--meta-connect jdbc:hsqldb:hsql://localhost:16000/sqoop  
+--create timeJob
+-- import
+--connect jdbc:mysql://localhost/CDW_SAPP
+--driver com.mysql.jdbc.Driver
+-m 1
+--query 'select CAST(CONCAT(year, "-", month, "-", day) AS DATE) AS TIMEID, DAY, MONTH, 
+case when month in ( 1, 2,3) then "Q1"
+ when month in ( 4, 5,6) then "Q2"
+ when month in ( 7, 8,9) then "Q3"
+ when month in ( 10, 11,12) then "Q4"
+end as Quarter,
+YEAR
+ from CDW_SAPP_CREDITCARD WHERE $CONDITIONS'
+
+--target-dir /user/maria_dev/Credit_Card_System/CDW_SAPP_D_TIME
+--delete-target-dir
